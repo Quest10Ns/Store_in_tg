@@ -1,0 +1,9 @@
+aiogram
+asyncio
+asyncpg
+pip
+psycopg2
+SQLAlchemy
+python-dotenv
+apscheduler
+pytz
