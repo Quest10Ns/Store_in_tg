@@ -13,3 +13,10 @@ async def set_user(tg_id, chat_id):
         if not user:
             session.add(User(telegram_id=tg_id, telegram_chat_id = chat_id))
             await session.commit()
+
+async def set_initials(tg_id, initials):
+    async with async_session() as session:
+        user = await session.scalar(select(User.telegram_id == tg_id))
+        if user:
+            session.add(initials = initials)
+            await session.commit()
