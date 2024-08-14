@@ -15,17 +15,31 @@ from dotenv import load_dotenv
 
 router = Router()
 
+
 class Register(StatesGroup):
     initials = State()
 
 
-
 @router.message(CommandStart())
 async def cmd_start(message: types.Message, state: FSMContext):
-    await message.answer('Добро пожаловать в pankletki. Необходиму пройти простую регистрацию', reply_markup=kb.main)
-    await message.answer('Введите ваше ФИО')
-    await rq.set_user(message.from_user.id, message.chat.id)
-    await state.set_state(Register.initials)
+    if ((await rq.get_user_tg_id(message.from_user.id) is not None) and (
+            await rq.get_user_chat_id(message.from_user.id) is not None) and (
+            await rq.get_user_initials(message.from_user.id) is not None)):
+        await message.answer(
+            f'{await rq.get_user_initials(message.from_user.id)}, рады снова Вас приветствовать в PanKletki',
+            reply_markup=kb.main_buttuns)
+    elif ((await rq.get_user_tg_id(message.from_user.id) is not None) and (
+            await rq.get_user_chat_id(message.from_user.id) is not None) and (
+                  await rq.get_user_initials(message.from_user.id) is None)):
+        await message.answer('Вам необходимо завершить регистрацию')
+        await state.set_state(Register.initials)
+        await message.answer('Введите ваше ФИО')
+    else:
+        await message.answer('Добро пожаловать в pankletki. Необходиму пройти простую регистрацию')
+        await message.answer('Введите ваше ФИО')
+        await rq.set_user(message.from_user.id, message.chat.id)
+        await state.set_state(Register.initials)
+
 
 @router.message(Register.initials)
 async def register_user(message: types.Message, state: FSMContext):
@@ -36,8 +50,33 @@ async def register_user(message: types.Message, state: FSMContext):
         f'Ваше ФИО: {data["initials"]}', reply_markup=kb.edit_button)
     await state.clear()
 
+
 @router.callback_query(F.data == 'data_is_right')
 async def accepst_initials(callback: types.CallbackQuery):
     await callback.message.answer('Отлично, регистрация успешно пройдена!',
-                                      reply_markup=kb.main_buttuns)
+                                  reply_markup=kb.main_buttuns)
     await callback.answer()
+
+
+@router.callback_query(F.data == 'editor')
+async def edit_personal_data(callback: types.CallbackQuery, state: FSMContext):
+    await state.set_state(Register.initials)
+    await callback.message.answer('Введите новые ФИО', reply_markup=kb.space)
+
+
+@router.message(F.text == 'ⓘЛичная информация')
+async def main_personal_data(message: types.Message):
+    if await rq.get_user_initials(message.from_user.id):
+        await message.answer(
+            f'Ваши данные: \n Количество заказов: in progress \n Сумма выкупа: in progress \n Ваше ФИО: {await rq.get_user_initials(message.from_user.id)}',
+            reply_markup=kb.edit_main_buttons)
+
+@router.callback_query(F.data == 'accept')
+async def acceppted_personal_data(callback: types.CallbackQuery):
+    await callback.answer('Успешно!')
+    await callback.message.answer('✅')
+
+@router.callback_query(F.data == 'edit')
+async def edit_main_persoanl_data(callback: types.CallbackQuery, state: FSMContext):
+    await state.set_state(Register.initials)
+    await callback.message.answer('Введите новые ФИО', reply_markup=kb.space)

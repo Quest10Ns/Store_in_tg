@@ -9,14 +9,36 @@ import re
 
 async def set_user(tg_id, chat_id):
     async with  async_session() as session:
-        user = await session.scalar(select(User.telegram_id == tg_id))
+        user = await session.scalar(select(User).filter(User.telegram_id == tg_id))
         if not user:
             session.add(User(telegram_id=tg_id, telegram_chat_id = chat_id))
             await session.commit()
 
-async def set_initials(tg_id, initials):
+async def set_initials(tg_id, initial):
     async with async_session() as session:
-        user = await session.scalar(select(User.telegram_id == tg_id))
+        user = await session.scalar(select(User).filter(User.telegram_id == tg_id))
         if user:
-            session.add(initials = initials)
+            user.initials = initial
             await session.commit()
+
+async def get_user_tg_id(tg_id):
+    async with  async_session() as session:
+        user = await session.scalar(select(User).filter(User.telegram_id == tg_id))
+        if user:
+            return user.telegram_id
+
+async def get_user_chat_id(tg_id):
+    async with  async_session() as session:
+        user = await session.scalar(select(User).filter(User.telegram_id == tg_id))
+        if user:
+            return user.telegram_chat_id
+
+async def get_user_initials(tg_id):
+    async with  async_session() as session:
+        user = await session.scalar(select(User).filter(User.telegram_id == tg_id))
+        if user:
+            return user.initials
+
+
+
+
