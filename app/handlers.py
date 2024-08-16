@@ -71,12 +71,20 @@ async def main_personal_data(message: types.Message):
             f'Ваши данные: \n Количество заказов: in progress \n Сумма выкупа: in progress \n Ваше ФИО: {await rq.get_user_initials(message.from_user.id)}',
             reply_markup=kb.edit_main_buttons)
 
+
 @router.callback_query(F.data == 'accept')
 async def acceppted_personal_data(callback: types.CallbackQuery):
     await callback.answer('Успешно!')
     await callback.message.answer('✅')
 
+
 @router.callback_query(F.data == 'edit')
 async def edit_main_persoanl_data(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(Register.initials)
     await callback.message.answer('Введите новые ФИО', reply_markup=kb.space)
+
+
+@router.message(F.text == '📋Каталог')
+async def check_catalog(message: types.Message):
+    keyboard = await kb.get_catas()
+    await message.answer('Какую категорию вы хотите посмотреть?', reply_markup=keyboard)

@@ -3,6 +3,7 @@ import sys
 import os
 from aiogram import Bot, Dispatcher
 from app.handlers import router
+from app.admHandlers import router2
 from app.database.models import async_main
 from dotenv import load_dotenv
 
@@ -14,7 +15,7 @@ async def main():
     dp1 = Dispatcher()
     dp2 = Dispatcher()
     dp1.include_router(router)
-    dp2.include_router(router)
+    dp2.include_router(router2)
     await asyncio.gather(dp1.start_polling(bot1), dp2.start_polling(bot2))
 
 if __name__ == '__main__':
