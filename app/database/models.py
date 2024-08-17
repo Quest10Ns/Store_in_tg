@@ -39,6 +39,12 @@ class Item(Base):
     description = mapped_column(Text, nullable=True)
     price = mapped_column(String(200), nullable=True)
 
+class Cart(Base):
+    __tablename__ = 'carts'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id = mapped_column(ForeignKey('users.id'))
+    goods = mapped_column(String(300), nullable=True)
+    price = mapped_column(String(200), nullable=True)
 async def async_main():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

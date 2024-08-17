@@ -1,6 +1,6 @@
 import os
 from app.database.models import async_session
-from app.database.models import User, Category, Item
+from app.database.models import User, Category, Item, Cart
 from sqlalchemy import select, update, delete, and_
 from datetime import datetime, time, date
 import time as tim
@@ -53,9 +53,11 @@ async def get_categories():
 
 async def set_category_id_for_item(category):
     async with async_session() as session:
+        print(category)
         cata = await session.scalar(select(Category).filter(Category.category == category))
         if cata:
             session.add(Item(category_id = cata.id))
+            await session.commit()
 async def set_other_data_about_item(name, description, price):
     async with async_session() as session:
         item = await session.scalar(
@@ -70,4 +72,45 @@ async def set_other_data_about_item(name, description, price):
             item.name = name
             item.description = description
             item.price = price
-        session.commit()
+        await session.commit()
+async def get_items(category):
+    async with async_session() as session:
+        cata = await session.scalar(select(Category).filter(Category.category == category))
+        if cata:
+            items = await session.scalars(select(Item).filter(Item.category_id == cata.id))
+            return items.all()
+
+async def add_to_cart(tg_id, data):
+    async with async_session() as session:
+        user = await session.scalar(select(User).filter(User.telegram_id == tg_id))
+        if user:
+            cart = await session.scalar(select(Cart).filter(Cart.user_id == user.id))
+            if not cart:
+                new_data = data.split('.')
+                print(new_data)
+                items = await session.scalar(select(Item).filter(Item.id == int(new_data[-1])))
+                session.add(Cart(user_id=user.id, goods = data, price = items.price))
+                await session.commit()
+            else:
+                last_cart = cart.goods
+                new_cart = last_cart + ' ' + data
+                cart.goods = new_cart
+                new_data = data.split('.')
+                items = await session.scalar(select(Item).filter(Item.id == int(new_data[-1])))
+                price = int(cart.price)
+                new_price = price + int(items.price)
+                cart.price = str(new_price)
+                await session.commit()
+
+async def get_cart(tg_id):
+    async with async_session() as session:
+        user = await session.scalar(select(User).filter(User.telegram_id == tg_id))
+        if user:
+            cart = await session.scalar(select(Cart).filter(Cart.user_id == user.id))
+            return cart
+
+async def get_item(item_id):
+    async with async_session() as session:
+        item = await session.scalar(select(Item).filter(Item.id == item_id))
+        if item:
+            return item

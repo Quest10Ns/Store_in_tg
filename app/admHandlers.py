@@ -98,17 +98,24 @@ async def check_catalog(message: types.Message):
     keyboard = await kb.get_catas()
     await message.answer('Какую категорию вы хотите посмотреть?', reply_markup=keyboard)
 
+@router2.callback_query(F.data.startswith('categori_'))
+async def show_goods(callback: types.CallbackQuery):
+    callback_data = callback.data
+    callback_data = callback_data[9::]
+    items_list = await rq.get_items(callback_data)
+    for item in items_list:
+        await callback.message.answer(f'{item.name}\n\n{item.description}\n\nЦена:{item.price} р')
 
-@router2.message(F.text == 'Дабаить в категорию')
+@router2.message(F.text == 'Добавить в категорию')
 async def add_categoty(message: types.Message, state: FSMContext):
-    keyboard = await kb.get_catas()
+    keyboard = await kb.get_catas_edit()
     await message.answer('Выберите категорию', reply_markup=keyboard)
 
 
-@router2.callback_query(F.data.startswith('category_'))
+@router2.callback_query(F.data.startswith('category_edit_'))
 async def add_item(callback: types.CallbackQuery, state: FSMContext):
     callback_data = callback.data
-    callback_data = callback_data[9::]
+    callback_data = callback_data[14::]
     await rq.set_category_id_for_item(callback_data)
     await state.set_state(setItem.name)
     await callback.message.answer('Введите название')
@@ -131,5 +138,5 @@ async def set_item_description(message: types.Message, state: FSMContext):
     data = await state.get_data()
     await rq.set_other_data_about_item(data["name"], data["description"], data["price"])
     await message.answer(
-        f'Назввание: {data["name"]}\nОписание: {data["description"]}\nЦена: {data["price"]}', reply_markup=kb.edit_buttons)
+        f'Назввание: {data["name"]}\nОписание: {data["description"]}\nЦена: {data["price"]}', reply_markup=kb.main_buttuns)
     await state.clear()

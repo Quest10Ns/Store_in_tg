@@ -12,7 +12,8 @@ from aiogram.fsm.context import FSMContext
 import app.keyboards as kb
 import app.database.requests as rq
 from dotenv import load_dotenv
-
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, InlineKeyboardMarkup, \
+    InlineKeyboardButton
 router = Router()
 
 
@@ -88,3 +89,36 @@ async def edit_main_persoanl_data(callback: types.CallbackQuery, state: FSMConte
 async def check_catalog(message: types.Message):
     keyboard = await kb.get_catas()
     await message.answer('Какую категорию вы хотите посмотреть?', reply_markup=keyboard)
+
+@router.callback_query(F.data.startswith('category_'))
+async def show_goods(callback: types.CallbackQuery):
+    callback_data = callback.data
+    callback_data = callback_data[9::]
+    items_list = await rq.get_items(callback_data)
+    for item in items_list:
+        add_to_cart = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text='🛒Добавить в карзину', callback_data=f'add_to_cart_{item.category_id}_{item.id}')]])
+        await callback.message.answer(f'{item.name}\n\n{item.description}\n\nЦена:{item.price} р', reply_markup=add_to_cart)
+
+@router.callback_query(F.data.startswith('add_to_cart_'))
+async def add_to_cart(callback: types.CallbackQuery):
+    callback_data = callback.data
+    print(callback_data)
+    callback_data = callback_data.split('_')
+    await rq.add_to_cart(callback.from_user.id, f'{callback_data[-2]}.{callback_data[-1]}')
+    print(f'{callback_data[-2]}.{callback_data[-1]}')
+    await callback.answer('Товар добавлен в корзину')
+
+@router.message(F.text == '🛒Корзина')
+async def check_catalog(message: types.Message):
+    cart = await rq.get_cart(message.from_user.id)
+    cart_string = 'Ваша карзина:\n\n'
+    for item in cart.goods.split(' '):
+        it = item.split('.')
+        item = await rq.get_item(int(it[-1]))
+        cart_string += item.name + '\n Цена: ' + item.price + '\n------------------------\n'
+
+    cart_string += 'Общая стоимость корзины: ' + cart.price
+    await message.answer(cart_string)
+
+
