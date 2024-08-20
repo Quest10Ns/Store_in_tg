@@ -14,6 +14,11 @@ import app.database.requests as rq
 from dotenv import load_dotenv
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, InlineKeyboardMarkup, \
     InlineKeyboardButton
+from app.payments import create
+from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
+
+
+
 router = Router()
 
 
@@ -119,6 +124,22 @@ async def check_catalog(message: types.Message):
         cart_string += item.name + '\n Цена: ' + item.price + '\n------------------------\n'
 
     cart_string += 'Общая стоимость корзины: ' + cart.price
-    await message.answer(cart_string)
+    await message.answer(cart_string, reply_markup=kb.cart_buttons)
 
+
+@router.message(F.data == 'oreder')
+async def order_and_pay(callback: types.CallbackQuery):
+    cart = await rq.get_cart(callback.from_user.id)
+    payment_url, payment_id = create(cart.price, callback.message.chat.id)
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Оплатить", url=payment_url))
+    builder.add(InlineKeyboardButton(text="Проверить оплату", callback_data='check'))
+    await callback.answer(f'Оплатите заказ', reply_markup=builder.as_markup())
+
+
+@router.message(F.data == 'edit_cart')
+async def order_and_pay(callback: types.CallbackQuery, bot: Bot):
+    await bot.edit_message_reply_markup(chat_id=callback.message.chat.id,
+                                        message_id=callback.message.message_id,
+                                        reply_markup=kb.get_cart_goods(callback.message.from_user.id))
 
