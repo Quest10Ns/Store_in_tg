@@ -114,3 +114,46 @@ async def get_item(item_id):
         item = await session.scalar(select(Item).filter(Item.id == item_id))
         if item:
             return item
+
+async def del_from_cart(tg_id, item_id):
+    async with async_session() as session:
+        user = await session.scalar(select(User).filter(User.telegram_id == tg_id))
+        if user:
+            cart = await session.scalar(select(Cart).filter(Cart.user_id == user.id))
+            goods = cart.goods
+            goods = goods.split(' ')
+            Flag = False
+            new_cart = ''
+            new_price = 0
+            for item in goods:
+                item = item.split('.')
+                print('in')
+                try:
+                    if int(item[-1]) == int(item_id):
+                        print('in if')
+                        if Flag == False:
+                            Flag == True
+                            print('in flag')
+                            continue
+                        else:
+                            print('in f else')
+                            new_cart += f'{item[0]}.{item[1]}'
+                            print(new_cart)
+                            items = await session.scalar(select(Item).filter(Item.id == int(item[-1])))
+                            new_price += int(items.price)
+                    else:
+                        print('in else')
+                        new_cart += f'{item[0]}.{item[1]}'
+                        print(new_cart)
+                        items = await session.scalar(select(Item).filter(Item.id == int(item[-1])))
+                        new_price += int(items.price)
+                except:
+                    pass
+            print(new_cart, '\n')
+            cart.goods = new_cart
+            cart.price = str(new_price)
+            await session.commit()
+
+
+
+

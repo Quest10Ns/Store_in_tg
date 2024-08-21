@@ -120,9 +120,12 @@ async def check_catalog(message: types.Message):
     cart_string = 'Ваша карзина:\n\n'
     for item in cart.goods.split(' '):
         it = item.split('.')
-        item = await rq.get_item(int(it[-1]))
-        cart_string += item.name + '\n Цена: ' + item.price + '\n------------------------\n'
-
+        print(it)
+        try:
+            item = await rq.get_item(int(it[-1]))
+            cart_string += item.name + '\n Цена: ' + item.price + '\n------------------------\n'
+        except:
+            pass
     cart_string += 'Общая стоимость корзины: ' + cart.price
     await message.answer(cart_string, reply_markup=kb.cart_buttons)
 
@@ -137,9 +140,27 @@ async def order_and_pay(callback: types.CallbackQuery):
     await callback.answer(f'Оплатите заказ', reply_markup=builder.as_markup())
 
 
-@router.message(F.data == 'edit_cart')
+@router.callback_query(F.data == 'edit_cart')
 async def order_and_pay(callback: types.CallbackQuery, bot: Bot):
     await bot.edit_message_reply_markup(chat_id=callback.message.chat.id,
                                         message_id=callback.message.message_id,
-                                        reply_markup=kb.get_cart_goods(callback.message.from_user.id))
+                                        reply_markup=await kb.get_cart_goods(callback.from_user.id))
+
+@router.callback_query(F.data.startswith('item_'))
+async def del_from_cart(callback: types.CallbackQuery, bot: Bot):
+    callback_data = callback.data
+    callback_data = callback_data[5::]
+    await rq.del_from_cart(callback.from_user.id, callback_data)
+    cart = await rq.get_cart(callback.from_user.id)
+    cart_string = 'Ваша карзина:\n\n'
+    for item in cart.goods.split(' '):
+        it = item.split('.')
+        item = await rq.get_item(int(it[-1]))
+        cart_string += item.name + '\n Цена: ' + item.price + '\n------------------------\n'
+    cart_string += 'Общая стоимость корзины: ' + cart.price
+    await bot.edit_message_text(chat_id=callback.message.chat.id,
+                               message_id=callback.message.message_id,
+                               text=cart_string,
+                               reply_markup=kb.cart_buttons)
+
 

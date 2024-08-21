@@ -43,5 +43,8 @@ async def get_cart_goods(tg_id):
     keyboard = InlineKeyboardBuilder()
     for item in goods:
         item = item.split('.')
-        keyboard.add(InlineKeyboardButton(text=f'{(await get_item(item[-1])).name}', callback_data=f'item_{item[-1]}'))
+        try:
+            keyboard.add(InlineKeyboardButton(text=f'{(await get_item(int(item[-1]))).name}', callback_data=f'item_{item[-1]}'))
+        except:
+            pass
     return keyboard.as_markup()
