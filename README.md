@@ -1,4 +1,4 @@
-# 🤝 Welcome to Kletki Store
+# 🤝 Welcome, there is an online store implemented here in the form of a telegram bot
 
 To work with this project, you need to have Python 3.12 installed. All the necessary libraries and frameworks can be
 found in the `requirements.txt` file. To install them, follow these steps:
