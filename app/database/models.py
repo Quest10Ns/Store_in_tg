@@ -4,7 +4,7 @@ from sqlalchemy import BigInteger, String, DateTime, ForeignKey, Text, Integer, 
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timedelta
 
 load_dotenv()
 engine = create_async_engine(url=os.getenv('SQLALCHEMY_URL'))
@@ -45,6 +45,21 @@ class Cart(Base):
     user_id = mapped_column(ForeignKey('users.id'))
     goods = mapped_column(String(300), nullable=True)
     price = mapped_column(String(200), nullable=True)
+
+
+class Order(Base):
+    __tablename__ = 'orders'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id = mapped_column(ForeignKey('users.id'))
+    goods = mapped_column(String(300), nullable=True)
+    adress = mapped_column(Text, nullable=True)
+    contacts = mapped_column(String(100), nullable=True)
+    comment = mapped_column(Text, nullable=True)
+    price = mapped_column(String(200), nullable=True)
+    date: Mapped[Date] = mapped_column(Date, default=datetime.now().date() + timedelta(days=2))
+    status = mapped_column(String(50), nullable=True)
+
+
 async def async_main():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

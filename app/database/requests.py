@@ -121,35 +121,13 @@ async def del_from_cart(tg_id, item_id):
         if user:
             cart = await session.scalar(select(Cart).filter(Cart.user_id == user.id))
             goods = cart.goods
-            goods = goods.split(' ')
-            Flag = False
             new_cart = ''
-            new_price = 0
-            for item in goods:
-                item = item.split('.')
-                print('in')
-                try:
-                    if int(item[-1]) == int(item_id):
-                        print('in if')
-                        if Flag == False:
-                            Flag == True
-                            print('in flag')
-                            continue
-                        else:
-                            print('in f else')
-                            new_cart += f'{item[0]}.{item[1]}'
-                            print(new_cart)
-                            items = await session.scalar(select(Item).filter(Item.id == int(item[-1])))
-                            new_price += int(items.price)
-                    else:
-                        print('in else')
-                        new_cart += f'{item[0]}.{item[1]}'
-                        print(new_cart)
-                        items = await session.scalar(select(Item).filter(Item.id == int(item[-1])))
-                        new_price += int(items.price)
-                except:
-                    pass
-            print(new_cart, '\n')
+            price = cart.price
+            new_price = int(price)
+            new_cart = goods.replace(item_id, '', 1)
+            item = item_id.split('.')
+            items = await session.scalar(select(Item).filter(Item.id == int(item[-1])))
+            new_price -= int(items.price)
             cart.goods = new_cart
             cart.price = str(new_price)
             await session.commit()

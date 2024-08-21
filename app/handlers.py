@@ -155,8 +155,11 @@ async def del_from_cart(callback: types.CallbackQuery, bot: Bot):
     cart_string = 'Ваша карзина:\n\n'
     for item in cart.goods.split(' '):
         it = item.split('.')
-        item = await rq.get_item(int(it[-1]))
-        cart_string += item.name + '\n Цена: ' + item.price + '\n------------------------\n'
+        try:
+            item = await rq.get_item(int(it[-1]))
+            cart_string += item.name + '\n Цена: ' + item.price + '\n------------------------\n'
+        except:
+            pass
     cart_string += 'Общая стоимость корзины: ' + cart.price
     await bot.edit_message_text(chat_id=callback.message.chat.id,
                                message_id=callback.message.message_id,
