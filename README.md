@@ -80,9 +80,9 @@ found in the `requirements.txt` file. To install them, follow these steps:
 7. Add the following to the `.env` file:
 
    ```
-   TOKEN = 6866916052:AAHQCfrFywwFizgEv1FyO9jHGP1bdaLlPoA
-   TOKEN2 = 7436017578:AAG82bQRSxEWvjtSvVCz4pbh_f11wcEDFtg
-   SQLALCHEMY_URL = postgresql+asyncpg://postgres:3720@localhost/kletkidb
+   TOKEN = token1
+   TOKEN2 = token2
+   SQLALCHEMY_URL = postgresql+asyncpg://user:password@host/dbname
    ADMIN_LOGIN = admlog
    ADMIN_PASSWORD = admpas
    ACCOUNT_ID = from yookassa
